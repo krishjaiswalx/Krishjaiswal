@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: "poppins", sans-serif;
+    background: linear-gradient(-45deg, #302b66, #003f8f, #1cd8d2);
+    min-height: 100vh;
+  }
+}
+
+h1,h2{
+    font-family: "roboto", sans-serif;
+}
+
+
