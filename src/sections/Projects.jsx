@@ -1,114 +1,190 @@
-import { motion } from "framer-motion";
-import Homigo from "../assets/Homigomob.png";
-import Zestro from "../assets/Zestromob.png";
 
-const projects = [
-  {
-    title: "Homigo – Airbnb Clone",
-    description:
-      "A full-stack rental booking platform with authentication, property listings, reviews, and RESTful backend integration.",
-    image: Homigo,
-    tech: ["React", "Node.js", "Express", "MongoDB", "JWT", "Tailwind"],
-    github: "https://github.com/krishjaiswalx",
-    live: "#",
-  },
-  {
-    title: "Zestro – Food Ordering Platform",
-    description:
-      "Responsive food ordering application with dynamic cart system, API integration, and smooth UI/UX experience.",
-    image: Zestro,
-    tech: ["React", "Context API", "Tailwind", "REST API"],
-    github: "https://github.com/krishjaiswalx",
-    live: "#",
-  },
 
-];
+import React from "react"; 
+import { motion, useScroll, AnimatePresence } from "framer-motion"; 
+// motion: for animating elements
+// useScroll: to track scroll position
+// AnimatePresence: to animate components when mounting/unmounting
+
+// Importing project images (desktop & mobile versions)
+import Homigomob from "../assets/Homigomob.png";
+import Zestromob from "../assets/Zestromob.png";
+import Homigo from "../assets/Homigo.png"
+import Zestro from "../assets/Zestro.png";
+
+const MH3 = motion.h3; 
+// Shortcut for <motion.h3> for easier typing
+
+// 🔹 Custom Hook: Detects if screen size matches "mobile"
+const useIsMobile = (query = "(max-width: 639px)") => {
+  const [isMobile, setIsMobile] = React.useState(
+    typeof window !== "undefined" && window.matchMedia(query).matches
+    // Checks if the screen width is <= 639px (mobile breakpoint)
+  );
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia(query); // Media query list
+    const handler = (e) => setIsMobile(e.matches); // Update state when query changes
+    mql.addEventListener?.("change", handler) || mql.addListener(handler); 
+    // Add correct event listener (modern OR fallback)
+
+    setIsMobile(mql.matches); // Initialize with current screen size
+    return () =>
+      mql.removeEventListener?.("change", handler) || mql.removeListener(handler); 
+    // Cleanup event listener
+  }, [query]);
+
+  return isMobile; 
+};
 
 export default function Projects() {
+  const isMobile = useIsMobile(); 
+  // Detect if the user is on a mobile screen
+
+  // 🔹 List of project objects (dynamic images based on screen size)
+  const projects = React.useMemo(
+    () => [
+      {
+        title: "HomigoStay - A Luxury Platform",
+        link: "#",
+        bgColor: "#0d4d3d",
+        image: isMobile ? Homigomob : Homigo, // Mobile vs desktop image
+      },
+      {
+        title: "Zestro- Smart Recepie Generator",
+        link: "#",
+        bgColor: "#3884d3",
+        image: isMobile ? Zestromob : Zestro,
+      },
+    ],
+    [isMobile] 
+    // Memoize to prevent recalculating unless screen size changes
+  );
+
+  const sceneRef = React.useRef(null); 
+  // Reference to the whole projects section (used for scroll tracking)
+
+  const { scrollYProgress } = useScroll({
+    target: sceneRef, 
+    offset: ["start start", "end end"], 
+    // Scroll progress is 0 when section top hits viewport top and 1 at the end
+  });
+
+  const thresholds = projects.map((_, i) => (i + 1) / projects.length); 
+  // Array of thresholds to switch between projects as user scrolls
+  const [activeIndex, setActiveIndex] = React.useState(0); 
+  // Keeps track of which project is currently active
+
+  // 🔹 Update activeIndex as user scrolls
+  React.useEffect(() => {
+    const unsubscribe = scrollYProgress.onChange((v) => {
+      const idx = thresholds.findIndex((t) => v <= t); 
+      // Find the first threshold that is greater than or equal to scroll progress
+      setActiveIndex(idx === -1 ? thresholds.length - 1 : idx); 
+      // If not found, show the last project
+    });
+    return () => unsubscribe(); 
+    // Cleanup scroll listener
+  }, [scrollYProgress, thresholds]);
+
+  const activeProject = projects[activeIndex]; 
+  // Currently displayed project
+
   return (
     <section
       id="projects"
-      className="relative min-h-screen bg-black text-white py-20 px-6"
+      ref={sceneRef} 
+      className="relative text-white"
+      style={{
+        height: `${100 * projects.length}vh`, 
+        // Section height = 100vh per project (makes scroll-based transitions work) 
+        backgroundColor: activeProject.bgColor, 
+        // Background changes color based on active project
+        transition: "background-color 400ms ease",
+      }}
     >
-      {/* Background Glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-10 left-10 w-[300px] h-[300px] bg-gradient-to-r from-[#302b63] to-[#1cd8d2] opacity-20 blur-[120px]" />
-        <div className="absolute bottom-10 right-10 w-[300px] h-[300px] bg-gradient-to-r from-[#00bf8f] to-[#302b63] opacity-20 blur-[120px]" />
-      </div>
+      {/* Sticky container keeps content fixed while scrolling */}
+      <div className="sticky top-0 h-screen flex flex-col items-center justify-center">
+        
+        {/* Section Title */}
+        <h2 className={`text-3xl font-semibold z-10 text-center ${isMobile ? "mt-4" : "mt-8"}`}>
+          My Work 
+        </h2>
 
-      <div className="relative max-w-6xl mx-auto">
-        {/* Heading */}
-        <motion.h2
-          className="text-4xl font-bold text-center mb-16 bg-clip-text text-transparent bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#302b63]"
-          initial={{ opacity: 0, y: -30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          Projects
-        </motion.h2>
-
-        {/* Adaptive Grid */}
-        <div className="grid gap-8 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-          {projects.map((project, index) => (
-            <motion.div
-              key={index}
-              whileHover={{ scale: 1.03 }}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.15 }}
-              viewport={{ once: true }}
-              className="bg-white/5 border border-white/10 backdrop-blur-md rounded-xl overflow-hidden flex flex-col h-full"
+        {/* Main Project Display Area */}
+        <div className={`relative w-full flex-1 flex items-center justify-center ${isMobile ? "-mt-4" : ""}`}>
+          {projects.map((project, idx) => (
+            <div
+              key={project.title}
+              className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${
+                activeIndex === idx ? "opacity-100 z-20" : "opacity-0 z-0 sm:z-10"
+              }`}
+              style={{ width: "85%", maxWidth: "1200px" }}
             >
-              {/* Image */}
-              <img
-                src={project.image}
-                alt={project.title}
-                className="w-full h-52 object-cover"
-              />
-
-              {/* Content */}
-              <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-xl font-semibold">
-                  {project.title}
-                </h3>
-
-                <p className="mt-3 text-gray-400 text-sm leading-relaxed">
-                  {project.description}
-                </p>
-
-                {/* Tech Tags */}
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {project.tech.map((tech, i) => (
-                    <span
-                      key={i}
-                      className="text-xs px-3 py-1 bg-white/10 rounded-full border border-white/20"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Buttons pinned bottom */}
-                <div className="mt-auto pt-6 flex flex-col sm:flex-row gap-3">
-                  <a
-                    href={project.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm px-4 py-2 bg-white text-black rounded-md font-medium hover:bg-gray-200 transition text-center"
+              {/* Animate project title when switching */}
+              <AnimatePresence mode="wait">
+                {activeIndex === idx && (
+                  <MH3
+                    key={project.title}
+                    initial={{ opacity: 0, y: -30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 30 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className={`block text-center text-[clamp(2rem,6vw,5rem)] text-white/95 sm:absolute sm:-top-21 sm:left-[35%] lg:left-[-5%] sm:mb-0 font-bangers italic font-semibold ${
+                      isMobile ? "-mt-25" : ""
+                    }`}
+                    style={{ zIndex: 5, textAlign: isMobile ? "center" : "left" }}
                   >
-                    GitHub
-                  </a>
+                    {project.title}
+                  </MH3>
+                )}
+              </AnimatePresence>
 
-                  <a
-                    href={project.live}
-                    className="text-sm px-4 py-2 border border-white/20 rounded-md hover:bg-white/10 transition text-center"
-                  >
-                    Live Demo
-                  </a>
-                </div>
+              {/* Project Image Wrapper */}
+              <div
+                className={`relative w-full overflow-hidden bg-black/20 shadow-2xl md:shadow-[0_35px_60px_-15px_rgba(0,0,0,0.7)] ${
+                  isMobile ? "mb-6 rounded-lg" : "mb-10 sm:mb-12 rounded-xl"
+                } h-[62vh] sm:h-[66vh]`}
+                style={{ zIndex: 10, transition: "box-shadow 250ms ease" }}
+              >
+                {/* Project Image */}
+                <img
+                  src={project.image}
+                  alt={project.title}
+                  className="w-full h-full object-cover drop-shadow-xl md:drop-shadow-2xl"
+                  style={{
+                    position: "relative",
+                    zIndex: 10,
+                    filter: "drop-shadow(0 16px 40px rgba(0,0,0,0.65))",
+                    transition: "filter 200ms ease",
+                  }}
+                  loading="lazy"
+                />
+                {/* Subtle gradient overlay for better readability */}
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    zIndex: 11,
+                    background: "linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0) 40%)",
+                  }}
+                />
               </div>
-            </motion.div>
+            </div>
           ))}
+        </div>
+
+        {/* View Project Button */}
+        <div className={`absolute ${isMobile ? "bottom-20" : "bottom-10"}`}>
+          <a
+            href={activeProject?.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block px-6 py-3 font-semibold rounded-lg bg-white text-black hover:bg-gray-200 transition-all"
+            aria-label={`View ${activeProject?.title}`}
+          >
+            View Project
+          </a>
         </div>
       </div>
     </section>

@@ -1,15 +1,14 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { FiX } from "react-icons/fi";
 
-export default function Overlaymenu({ isopen, onclose }) {
-  const origin =
-    typeof window !== "undefined" && window.innerWidth < 1024
-      ? "95% 8%"
-      : "50% 8%";
+export default function OverlayMenu({ isOpen, onClose }) {
+  // Pick clip origin based on screen width
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 1024; // lg breakpoint
+  const origin = isMobile ? "95% 8%" : "50% 8%";
 
   return (
     <AnimatePresence>
-      {isopen && (
+      {isOpen && (
         <motion.div
           className="fixed inset-0 flex items-center justify-center z-50"
           initial={{ clipPath: `circle(0% at ${origin})` }}
@@ -18,14 +17,16 @@ export default function Overlaymenu({ isopen, onclose }) {
           transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
           style={{ backgroundColor: "rgba(0,0,0,0.95)" }}
         >
+          {/* Close Button */}
           <button
-            onClick={onclose}
-            className="text-white text-3xl absolute top-6 right-6"
-            aria-label="Close Menu"
+            onClick={onClose}
+            className="absolute top-6 right-6 text-white text-3xl"
+            aria-label="Close menu"
           >
             <FiX />
           </button>
 
+          {/* Menu Links */}
           <ul className="space-y-6 text-center">
             {[
               "Home",
@@ -38,14 +39,14 @@ export default function Overlaymenu({ isopen, onclose }) {
             ].map((item, index) => (
               <motion.li
                 key={item}
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + index * 0.1 }}
               >
                 <a
                   href={`#${item.toLowerCase()}`}
-                  onClick={onclose}
-                  className="text-white text-4xl font-semibold hover:text-pink-400 transition-colors"
+                  onClick={onClose}
+                  className="text-4xl text-white font-semibold hover:text-pink-400 transition-colors duration-300"
                 >
                   {item}
                 </a>
